@@ -113,7 +113,7 @@ struct OAuthTokenErrorResponse: Decodable {
 ///
 /// Stored by ``TokenStorage`` and produced by ``OAuthAuthorizer`` after a successful
 /// token request. Use ``isExpired(now:skewSeconds:)`` to check validity before use.
-public struct OAuthAccessToken: Sendable {
+public struct OAuthAccessToken: Sendable, Codable {
     /// The raw bearer token string for use in the `Authorization` header.
     public let value: String
 
@@ -135,6 +135,14 @@ public struct OAuthAccessToken: Sendable {
     /// The refresh token, if the authorization server issued one alongside the access token.
     public let refreshToken: String?
 
+    /// The OAuth `client_id` this token was issued to, if the authorizer had one at storage time.
+    ///
+    /// Captures the `client_id` held by the authorizer's ``OAuthConfiguration/authentication`` when
+    /// the token was saved — including identifiers assigned by Dynamic Client Registration
+    /// (RFC 7591). `nil` when no `client_id` was configured (for example, the placeholder used
+    /// before registration completes).
+    public let clientID: String?
+
     /// Creates a new access token record.
     public init(
         value: String,
@@ -142,7 +150,8 @@ public struct OAuthAccessToken: Sendable {
         expiresAt: Date?,
         scopes: Set<String>,
         authorizationServer: URL?,
-        refreshToken: String?
+        refreshToken: String?,
+        clientID: String? = nil
     ) {
         self.value = value
         self.tokenType = tokenType
@@ -150,6 +159,7 @@ public struct OAuthAccessToken: Sendable {
         self.scopes = scopes
         self.authorizationServer = authorizationServer
         self.refreshToken = refreshToken
+        self.clientID = clientID
     }
 
     /// Returns `true` if the token has expired or will expire within the skew window.
